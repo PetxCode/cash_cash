@@ -1,6 +1,9 @@
-import { Application, Request, Response } from "express";
+import { Application, NextFunction, Request, Response } from "express";
 import user from "./router/userRouter";
 import transactions from "./router/walletRouter";
+import { handleError } from "./error/handleError";
+import { HTTP } from "./utils/enums";
+import { mainError } from "./error/mianError";
 
 export const mainApp = async (app: Application) => {
   try {
@@ -12,6 +15,19 @@ export const mainApp = async (app: Application) => {
         message: "Awesome",
       });
     });
+
+    app.all("*", (req: Request, res: Response, next: NextFunction) => {
+      next(
+        new mainError({
+          name: `Route Error`,
+          message: `Route Error: because the page, ${req.originalUrl} doesn't exist`,
+          status: HTTP.BAD_REQUEST,
+          success: false,
+        })
+      );
+    });
+
+    app.use(handleError);
   } catch (error) {
     console.error(error);
   }

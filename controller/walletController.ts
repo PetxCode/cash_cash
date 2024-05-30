@@ -438,3 +438,48 @@ export const initiateBillPaymentForAirTime = async (
     });
   }
 };
+
+// using flutterwave API: Bill Payment
+
+export const initiateBillPaymentForData = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { amount } = req.body;
+    const { userID } = req.params;
+
+    const user = await userModel.findById(userID);
+    const code = crypto.randomBytes(6).toString("hex");
+
+    const data = {
+      country: "NG",
+      customer_id: `0${user?.accountNumber}`,
+      amount,
+      recurrence: "ONCE",
+      type: "DATA", // Type of bill (e.g., AIRTIME, DATA, DSTV, etc.)
+      reference: `${moment(Date.now()).format("lll")}-${code}`, // Unique transaction reference
+    };
+
+    await axios
+      .post("https://api.flutterwave.com/v3/bills", data, {
+        headers: {
+          Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}`,
+          "Content-Type": "application/json",
+        },
+      })
+      .then((response) => {
+        return res.status(201).json({
+          message: "Airtime Purchased",
+          data: response?.data,
+        });
+      });
+
+    // Handle response
+  } catch (error: any) {
+    return res.status(404).json({
+      message: "Airtime Purchased",
+      data: error,
+    });
+  }
+};

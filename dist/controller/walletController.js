@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.initiateBillPaymentForAirTime = exports.verifyAccountPayout = exports.accountPayout = exports.verifyTransaction = exports.initializeTransaction = exports.verifyDeposite = exports.depositeFund = exports.transferToWallet = void 0;
+exports.initiateBillPaymentForData = exports.initiateBillPaymentForAirTime = exports.verifyAccountPayout = exports.accountPayout = exports.verifyTransaction = exports.initializeTransaction = exports.verifyDeposite = exports.depositeFund = exports.transferToWallet = void 0;
 const userModel_1 = __importDefault(require("../model/userModel"));
 const node_https_1 = __importDefault(require("node:https"));
 const dotenv_1 = __importDefault(require("dotenv"));
@@ -397,3 +397,41 @@ const initiateBillPaymentForAirTime = (req, res) => __awaiter(void 0, void 0, vo
     }
 });
 exports.initiateBillPaymentForAirTime = initiateBillPaymentForAirTime;
+// using flutterwave API: Bill Payment
+const initiateBillPaymentForData = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { amount } = req.body;
+        const { userID } = req.params;
+        const user = yield userModel_1.default.findById(userID);
+        const code = crypto_1.default.randomBytes(6).toString("hex");
+        const data = {
+            country: "NG",
+            customer_id: `0${user === null || user === void 0 ? void 0 : user.accountNumber}`,
+            amount,
+            recurrence: "ONCE",
+            type: "DATA", // Type of bill (e.g., AIRTIME, DATA, DSTV, etc.)
+            reference: `${(0, moment_1.default)(Date.now()).format("lll")}-${code}`, // Unique transaction reference
+        };
+        yield axios_1.default
+            .post("https://api.flutterwave.com/v3/bills", data, {
+            headers: {
+                Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}`,
+                "Content-Type": "application/json",
+            },
+        })
+            .then((response) => {
+            return res.status(201).json({
+                message: "Airtime Purchased",
+                data: response === null || response === void 0 ? void 0 : response.data,
+            });
+        });
+        // Handle response
+    }
+    catch (error) {
+        return res.status(404).json({
+            message: "Airtime Purchased",
+            data: error,
+        });
+    }
+});
+exports.initiateBillPaymentForData = initiateBillPaymentForData;

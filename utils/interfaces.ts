@@ -1,3 +1,12 @@
+import { HTTP } from "./enums";
+
+export interface iError {
+  name: string;
+  message: string;
+  status: HTTP;
+  success: boolean;
+}
+
 export interface iUser {
   firstName: string;
   lastName: string;

@@ -15,6 +15,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.mainApp = void 0;
 const userRouter_1 = __importDefault(require("./router/userRouter"));
 const walletRouter_1 = __importDefault(require("./router/walletRouter"));
+const handleError_1 = require("./error/handleError");
+const enums_1 = require("./utils/enums");
+const mianError_1 = require("./error/mianError");
 const mainApp = (app) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         app.use("/api/v1", userRouter_1.default);
@@ -24,6 +27,15 @@ const mainApp = (app) => __awaiter(void 0, void 0, void 0, function* () {
                 message: "Awesome",
             });
         });
+        app.all("*", (req, res, next) => {
+            next(new mianError_1.mainError({
+                name: `Route Error`,
+                message: `Route Error: because the page, ${req.originalUrl} doesn't exist`,
+                status: enums_1.HTTP.BAD_REQUEST,
+                success: false,
+            }));
+        });
+        app.use(handleError_1.handleError);
     }
     catch (error) {
         console.error(error);
